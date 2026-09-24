@@ -4,6 +4,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import SearchFilter, OrderingFilter
 
 from .models import Category, Project, Tag, Task, Subtask, TaskFile, Comment, Favorite, FavoriteItem
+from .filters import TaskFilter
 from .serializers import (
     CategorySerializer, ProjectSerializer, TagSerializer,
     TaskListSerializer, TaskSerializer, SubtaskSerializer,
@@ -21,6 +22,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
     filterset_fields = ['category', 'owner']
 
 
@@ -29,12 +31,12 @@ class TagViewSet(viewsets.ModelViewSet):
     serializer_class = TagSerializer
 
 
-# ---- CRUD для задач (раздел 8 ТЗ) ----
+# ---- CRUD для задач с фильтрацией, поиском и сортировкой ----
 class TaskListCreateAPIView(generics.ListCreateAPIView):
     queryset = Task.objects.all()
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['project', 'priority', 'completed', 'assignee', 'tags']
+    filterset_class = TaskFilter
     search_fields = ['title', 'description']
     ordering_fields = ['deadline', 'created_date', 'priority']
 
@@ -54,19 +56,24 @@ class SubtaskViewSet(viewsets.ModelViewSet):
     queryset = Subtask.objects.all()
     serializer_class = SubtaskSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['task', 'completed']
 
 
 class TaskFileViewSet(viewsets.ModelViewSet):
     queryset = TaskFile.objects.all()
     serializer_class = TaskFileSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['task']
 
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
-    filterset_fields = ['task']
+    filter_backends = [DjangoFilterBackend]
+    filterset_fields = ['task', 'user']
 
 
 class FavoriteAPIView(generics.RetrieveAPIView):
